@@ -31,6 +31,11 @@ reviewRouter.get("/property/:propertyId", async (req, res, next) => {
 
 reviewRouter.post("/property/:propertyId", verifyJWT, requireRole("tenant"), async (req, res, next) => {
   try {
+    if (typeof req.body.rating !== "number" || req.body.rating < 1 || req.body.rating > 5) {
+      res.status(400).json({ message: "Rating must be a number between 1 and 5" });
+      return;
+    }
+
     const propertyId = Array.isArray(req.params.propertyId) ? req.params.propertyId[0] : req.params.propertyId;
     const review = await ReviewModel.create({
       propertyId: new mongoose.Types.ObjectId(propertyId),
