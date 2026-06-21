@@ -81,22 +81,35 @@ adminRouter.patch("/properties/:id/moderate", verifyJWT, requireRole("admin"), a
   }
 });
 
-adminRouter.get("/bookings", verifyJWT, requireRole("admin"), async (_req, res, next) => {
+adminRouter.get("/bookings", verifyJWT, requireRole("admin"), async (req, res, next) => {
   try {
-    const bookings = await BookingModel.find().populate("propertyId").sort({ createdAt: -1 }).lean();
-    res.json({ bookings });
+    const page = Math.max(Number(req.query.page ?? 1), 1);
+    const limit = Math.min(Math.max(Number(req.query.limit ?? 10), 1), 50);
+    const skip = (page - 1) * limit;
+
+    const [total, bookings] = await Promise.all([
+      BookingModel.countDocuments(),
+      BookingModel.find().populate("propertyId").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    ]);
+
+    res.json({ bookings, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
   } catch (error) {
     next(error);
   }
 });
 
-adminRouter.get("/transactions", verifyJWT, requireRole("admin"), async (_req, res, next) => {
+adminRouter.get("/transactions", verifyJWT, requireRole("admin"), async (req, res, next) => {
   try {
-    const transactions = await TransactionModel.find()
-      .populate("propertyId")
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json({ transactions });
+    const page = Math.max(Number(req.query.page ?? 1), 1);
+    const limit = Math.min(Math.max(Number(req.query.limit ?? 10), 1), 50);
+    const skip = (page - 1) * limit;
+
+    const [total, transactions] = await Promise.all([
+      TransactionModel.countDocuments(),
+      TransactionModel.find().populate("propertyId").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    ]);
+
+    res.json({ transactions, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
   } catch (error) {
     next(error);
   }
