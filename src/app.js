@@ -50,6 +50,10 @@ app.use("/api/payments", paymentRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/owner", ownerRouter);
 
+app.use((req, res, next) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
 app.use((err, req, res, next) => {
   console.error("Global error:", err);
   const status = err.status || err.statusCode || 500;
