@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { env } from "./config/env.js";
 import { authRouter } from "./routes/auth.js";
 import { bookingRouter } from "./routes/bookings.js";
@@ -31,6 +32,15 @@ app.use(
     credentials: true,
   }),
 );
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
+
+app.use(limiter);
 
 app.use(express.json({ limit: "1mb" }));
 
