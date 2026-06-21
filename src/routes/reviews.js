@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Types } from "mongoose";
+import mongoose from "mongoose";
 import { ReviewModel } from "../models/review.js";
 import { requireRole, verifyJWT } from "../middleware/auth.js";
 
@@ -20,7 +20,7 @@ reviewRouter.get("/featured", async (_req, res, next) => {
 reviewRouter.get("/property/:propertyId", async (req, res, next) => {
   try {
     const propertyId = Array.isArray(req.params.propertyId) ? req.params.propertyId[0] : req.params.propertyId;
-    const reviews = await ReviewModel.find({ propertyId: new Types.ObjectId(propertyId) })
+    const reviews = await ReviewModel.find({ propertyId: new mongoose.Types.ObjectId(propertyId) })
       .sort({ createdAt: -1 })
       .lean();
     res.json({ reviews });
@@ -33,7 +33,7 @@ reviewRouter.post("/property/:propertyId", verifyJWT, requireRole("tenant"), asy
   try {
     const propertyId = Array.isArray(req.params.propertyId) ? req.params.propertyId[0] : req.params.propertyId;
     const review = await ReviewModel.create({
-      propertyId: new Types.ObjectId(propertyId),
+      propertyId: new mongoose.Types.ObjectId(propertyId),
       tenantId: req.user?.userId,
       name: req.body.name,
       email: req.body.email,

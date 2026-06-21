@@ -10,7 +10,7 @@ async function bootstrap() {
   });
 }
 
-bootstrap().catch((error: unknown) => {
+bootstrap().catch((error) => {
   console.error("Server bootstrap failed:", error);
   process.exit(1);
 });

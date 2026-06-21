@@ -1,4 +1,4 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const favoriteSchema = new Schema(
   {
@@ -10,5 +10,4 @@ const favoriteSchema = new Schema(
 
 favoriteSchema.index({ tenantId: 1, propertyId: 1 }, { unique: true });
 
-export type Favorite = InferSchemaType<typeof favoriteSchema>;
 export const FavoriteModel = model("Favorite", favoriteSchema);

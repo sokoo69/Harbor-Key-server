@@ -13,7 +13,7 @@ adminRouter.get("/users", verifyJWT, requireRole("admin"), async (req, res, next
     const limit = Math.min(Math.max(Number(req.query.limit ?? 10), 1), 50);
     const skip = (page - 1) * limit;
 
-    const db = mongoose.connection.db!;
+    const db = mongoose.connection.db;
     const users = await db
       .collection("user")
       .find({})
@@ -31,7 +31,7 @@ adminRouter.get("/users", verifyJWT, requireRole("admin"), async (req, res, next
 
 adminRouter.patch("/users/:id/role", verifyJWT, requireRole("admin"), async (req, res, next) => {
   try {
-    await mongoose.connection.db!.collection("user").updateOne(
+    await mongoose.connection.db.collection("user").updateOne(
       { id: req.params.id },
       { $set: { role: req.body.role } },
     );
@@ -56,6 +56,11 @@ adminRouter.patch("/properties/:id/moderate", verifyJWT, requireRole("admin"), a
     const property = await PropertyModel.findById(req.params.id);
     if (!property) {
       res.status(404).json({ message: "Property not found" });
+      return;
+    }
+
+    if (req.body.status === "Rejected" && !req.body.rejectionFeedback?.trim()) {
+      res.status(400).json({ message: "Rejection feedback is required when rejecting a property" });
       return;
     }
 

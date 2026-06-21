@@ -1,4 +1,4 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const ownerInfoSchema = new Schema(
   {
@@ -39,5 +39,4 @@ const propertySchema = new Schema(
 
 propertySchema.index({ status: 1, location: 1, propertyType: 1, rent: 1 });
 
-export type Property = InferSchemaType<typeof propertySchema>;
 export const PropertyModel = model("Property", propertySchema);

@@ -1,4 +1,4 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const bookingSchema = new Schema(
   {
@@ -28,5 +28,4 @@ const bookingSchema = new Schema(
 bookingSchema.index({ tenantId: 1, createdAt: -1 });
 bookingSchema.index({ ownerId: 1, bookingStatus: 1 });
 
-export type Booking = InferSchemaType<typeof bookingSchema>;
 export const BookingModel = model("Booking", bookingSchema);

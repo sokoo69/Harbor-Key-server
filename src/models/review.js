@@ -1,4 +1,4 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const reviewSchema = new Schema(
   {
@@ -12,5 +12,4 @@ const reviewSchema = new Schema(
   { timestamps: true },
 );
 
-export type Review = InferSchemaType<typeof reviewSchema>;
 export const ReviewModel = model("Review", reviewSchema);

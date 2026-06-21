@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Types } from "mongoose";
+import mongoose from "mongoose";
 import { PropertyModel } from "../models/property.js";
 import { requireRole, verifyJWT } from "../middleware/auth.js";
 
@@ -17,12 +17,12 @@ propertyRouter.get("/", async (req, res, next) => {
     const minPrice = Number(req.query.minPrice ?? 0);
     const maxPrice = Number(req.query.maxPrice ?? Number.MAX_SAFE_INTEGER);
 
-    const filter: Record<string, unknown> = { status: "Approved" };
+    const filter = { status: "Approved" };
     if (location) filter.location = { $regex: location, $options: "i" };
     if (propertyType) filter.propertyType = propertyType;
     filter.rent = { $gte: minPrice, $lte: maxPrice };
 
-    const sortStage: Record<string, 1 | -1> =
+    const sortStage =
       sort === "price-asc"
         ? { rent: 1 }
         : sort === "price-desc"

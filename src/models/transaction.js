@@ -1,4 +1,4 @@
-import { Schema, model, type InferSchemaType } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const transactionSchema = new Schema(
   {
@@ -12,5 +12,4 @@ const transactionSchema = new Schema(
   { timestamps: true },
 );
 
-export type Transaction = InferSchemaType<typeof transactionSchema>;
 export const TransactionModel = model("Transaction", transactionSchema);
