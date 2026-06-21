@@ -20,6 +20,10 @@ bookingRouter.get("/mine", verifyJWT, requireRole("tenant"), async (req, res, ne
 
 bookingRouter.patch("/:id/cancel", verifyJWT, requireRole("tenant"), async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid booking ID format" });
+    }
+
     const booking = await BookingModel.findById(req.params.id);
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
