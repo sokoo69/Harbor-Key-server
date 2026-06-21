@@ -14,8 +14,8 @@ propertyRouter.get("/", async (req, res, next) => {
     const location = String(req.query.location ?? search).trim();
     const propertyType = String(req.query.type ?? "").trim();
     const sort = String(req.query.sort ?? "recent");
-    const minPrice = Number(req.query.minPrice ?? 0);
-    const maxPrice = Number(req.query.maxPrice ?? Number.MAX_SAFE_INTEGER);
+    const minPrice = isNaN(Number(req.query.minPrice)) || req.query.minPrice === "" ? 0 : Number(req.query.minPrice);
+    const maxPrice = isNaN(Number(req.query.maxPrice)) || req.query.maxPrice === "" ? Number.MAX_SAFE_INTEGER : Number(req.query.maxPrice);
 
     const filter = { status: "Approved" };
     if (location) filter.location = { $regex: location, $options: "i" };

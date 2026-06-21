@@ -18,6 +18,30 @@ bookingRouter.get("/mine", verifyJWT, requireRole("tenant"), async (req, res, ne
   }
 });
 
+bookingRouter.patch("/:id/cancel", verifyJWT, requireRole("tenant"), async (req, res, next) => {
+  try {
+    const booking = await BookingModel.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.tenantId !== req.user?.userId) {
+      return res.status(403).json({ message: "Forbidden: You do not own this booking" });
+    }
+
+    if (booking.bookingStatus !== "Pending") {
+      return res.status(400).json({ message: "Only pending bookings can be cancelled" });
+    }
+
+    booking.bookingStatus = "Cancelled";
+    await booking.save();
+    
+    res.json({ booking });
+  } catch (error) {
+    next(error);
+  }
+});
+
 bookingRouter.get("/owner", verifyJWT, requireRole("owner"), async (req, res, next) => {
   try {
     const bookings = await BookingModel.find({ ownerId: req.user?.userId })

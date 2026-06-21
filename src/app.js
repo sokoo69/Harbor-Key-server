@@ -49,3 +49,17 @@ app.use("/api/reviews", reviewRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/owner", ownerRouter);
+
+app.use((err, req, res, next) => {
+  console.error("Global error:", err);
+  const status = err.status || err.statusCode || 500;
+  
+  if (process.env.NODE_ENV === "production") {
+    res.status(status).json({ message: "Something went wrong" });
+  } else {
+    res.status(status).json({ 
+      message: err.message || "Something went wrong", 
+      stack: err.stack 
+    });
+  }
+});
