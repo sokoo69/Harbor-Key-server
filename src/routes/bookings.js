@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { BookingModel } from "../models/booking.js";
 import { PropertyModel } from "../models/property.js";
 import { requireRole, verifyJWT } from "../middleware/auth.js";
