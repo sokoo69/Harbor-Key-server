@@ -82,6 +82,11 @@ propertyRouter.get("/:id", verifyJWT, async (req, res, next) => {
 
 propertyRouter.post("/", verifyJWT, requireRole("owner", "admin"), async (req, res, next) => {
   try {
+    if (!req.body.title || !req.body.location) {
+      res.status(400).json({ message: "Title and location are required" });
+      return;
+    }
+
     const property = await PropertyModel.create({
       ...req.body,
       ownerId: req.user?.userId,
