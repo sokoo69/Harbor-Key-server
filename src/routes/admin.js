@@ -7,6 +7,52 @@ import { requireRole, verifyJWT } from "../middleware/auth.js";
 
 export const adminRouter = Router();
 
+adminRouter.get("/summary", verifyJWT, requireRole("admin"), async (req, res, next) => {
+  try {
+    const db = mongoose.connection.db;
+    
+    const [totalUsers, totalOwners, totalProperties, totalBookings] = await Promise.all([
+      db.collection("user").countDocuments(),
+      db.collection("user").countDocuments({ role: "owner" }),
+      PropertyModel.countDocuments(),
+      BookingModel.countDocuments()
+    ]);
+
+    // Aggregate monthly earnings from Transactions
+    const earningsPipeline = [
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" }
+          },
+          totalAmount: { $sum: "$amount" }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ];
+
+    const earningsData = await TransactionModel.aggregate(earningsPipeline);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Format data for Recharts
+    const chartData = earningsData.map(item => ({
+      label: months[item._id.month - 1],
+      amount: item.totalAmount
+    }));
+
+    res.json({
+      totalUsers,
+      totalOwners,
+      totalProperties,
+      totalBookings,
+      chartData
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 adminRouter.get("/users", verifyJWT, requireRole("admin"), async (req, res, next) => {
   try {
     const page = Math.max(Number(req.query.page ?? 1), 1);
@@ -31,8 +77,13 @@ adminRouter.get("/users", verifyJWT, requireRole("admin"), async (req, res, next
 
 adminRouter.patch("/users/:id/role", verifyJWT, requireRole("admin"), async (req, res, next) => {
   try {
+    let queryId = req.params.id;
+    try {
+      queryId = new mongoose.Types.ObjectId(req.params.id);
+    } catch {}
+
     await mongoose.connection.db.collection("user").updateOne(
-      { id: req.params.id },
+      { $or: [{ _id: req.params.id }, { _id: queryId }, { id: req.params.id }] },
       { $set: { role: req.body.role } },
     );
 
@@ -109,7 +160,24 @@ adminRouter.get("/transactions", verifyJWT, requireRole("admin"), async (req, re
       TransactionModel.find().populate("propertyId").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     ]);
 
-    res.json({ transactions, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+    const userIds = [...new Set(transactions.flatMap(t => [t.tenantId, t.ownerId]))].filter(Boolean);
+    const objectIds = userIds.map(id => {
+      try { return new mongoose.Types.ObjectId(id); } catch { return id; }
+    });
+
+    const users = await mongoose.connection.db.collection("user").find({
+      $or: [ { _id: { $in: objectIds } }, { _id: { $in: userIds } }, { id: { $in: userIds } } ]
+    }).toArray();
+    
+    const userMap = Object.fromEntries(users.map(u => [(u._id || u.id).toString(), u.name]));
+
+    const enrichedTransactions = transactions.map(t => ({
+      ...t,
+      tenantName: userMap[t.tenantId] || t.tenantId,
+      ownerName: userMap[t.ownerId] || t.ownerId
+    }));
+
+    res.json({ transactions: enrichedTransactions, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
   } catch (error) {
     next(error);
   }

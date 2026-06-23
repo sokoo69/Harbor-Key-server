@@ -44,18 +44,19 @@ paymentRouter.post("/checkout", verifyJWT, requireRole("tenant"), async (req, re
         },
       ],
       metadata: {
-        propertyId: String(property._id),
-        ownerId: property.ownerId,
-        tenantId: String(req.user?.userId),
+        propertyId: String(property._id ?? ""),
+        ownerId:    String(property.ownerId ?? ""),
+        tenantId:   String(req.user?.userId ?? req.user?.id ?? ""),
         moveInDate: String(req.body.moveInDate ?? ""),
         contactNumber: String(req.body.contactNumber ?? ""),
         additionalNotes: String(req.body.additionalNotes ?? ""),
-        amount: String(property.rent),
+        amount:     String(property.rent ?? 0),
       },
     });
 
     res.json({ url: session.url, sessionId: session.id });
   } catch (error) {
+    console.log("[CHECKOUT ERROR]", error?.message, error?.type, error?.code);
     next(error);
   }
 });
